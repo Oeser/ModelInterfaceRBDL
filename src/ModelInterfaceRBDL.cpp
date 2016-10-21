@@ -21,3 +21,32 @@
 
 SHLIBPP_DEFINE_SHARED_SUBCLASS(model_interface_rbdl, XBot::ModelInterfaceRBDL, XBot::ModelInterface);
 
+void XBot::ModelInterfaceRBDL::getCOM(KDL::Vector& com_position) const
+{
+    double mass;
+    RigidBodyDynamics::Utils::CalcCenterOfMass(_rbdl_model, _q, _qdot, mass, _tmp_vector3d, nullptr, nullptr, false);
+    tf::vectorEigenToKDL(_tmp_vector3d, com_position);
+}
+
+void XBot::ModelInterfaceRBDL::getCOMJacobian(KDL::Jacobian& J) const
+{
+    _tmp_jacobian6.setZero(6, _rbdl_model.dof_count);
+    double mass;
+    int body_id = 0;
+    for( const RigidBodyDynamics::Body& body : _rbdl_model.mBodies ){
+        _tmp_jacobian3.setZero(3, _rbdl_model.dof_count);
+        RigidBodyDynamics::CalcPointJacobian(_rbdl_model, _q, body_id, body.mCenterOfMass, _tmp_jacobian3, false);
+        _tmp_jacobian6.block(0,0,3,_rbdl_model.dof_count) += body.mMass * _tmp_jacobian3;
+        mass += body.mMass;
+    }
+    _tmp_jacobian6 /= mass;
+    J.data = _tmp_jacobian6;
+    
+}
+
+bool XBot::ModelInterfaceRBDL::getPose(const std::string& source_frame, 
+                                       const std::string& target_frame, 
+                                       KDL::Frame& pose) const
+{
+    return false;
+}

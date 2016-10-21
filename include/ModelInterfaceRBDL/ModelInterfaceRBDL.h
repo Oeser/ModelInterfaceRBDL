@@ -22,6 +22,9 @@
 
 #include <XBotInterface/ModelInterface.h>
 #include <SharedLibraryClass.h>
+#include <rbdl/rbdl.h>
+#include <rbdl/rbdl_utils.h>
+#include <rbdl/addons/urdfreader/urdfreader.h>
 
 
 namespace XBot
@@ -34,8 +37,6 @@ public:
     
 virtual void getCOM(KDL::Vector& com_position) const;
 
-virtual void getCOMAcceleration(KDL::Vector& acceleration) const;
-
 virtual void getCOMJacobian(KDL::Jacobian& J) const;
 
 virtual void getCOMVelocity(KDL::Vector& velocity) const;
@@ -46,7 +47,7 @@ virtual void getModelID(std::vector< std::string >& joint_name) const;
 
 virtual bool getPointJacobian(const std::string& link_name, const KDL::Vector& reference_point, KDL::Jacobian& J) const;
 
-virtual bool getPose(const std::string& source_frame, KDL::Frame& pose);
+virtual bool getPose(const std::string& source_frame, KDL::Frame& pose) const;
 
 virtual bool getPose(const std::string& source_frame, const std::string& target_frame, KDL::Frame& pose) const;
 
@@ -62,10 +63,18 @@ virtual void setGravity(const KDL::Vector& gravity);
 
 virtual bool update(bool update_position = true, bool update_velocity = false, bool update_desired_acceleration = false);
 
-    
+
+
 protected:
     
 private:
+    
+    mutable RigidBodyDynamics::Model _rbdl_model;
+    
+    Eigen::VectorXd _q, _qdot, _qddot, _tau; //TBD initialize
+    
+    mutable RigidBodyDynamics::Math::Vector3d _tmp_vector3d;
+    mutable RigidBodyDynamics::Math::MatrixNd _tmp_jacobian3, _tmp_jacobian3_1, _tmp_jacobian6;
     
 
 };

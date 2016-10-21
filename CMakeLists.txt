@@ -46,6 +46,9 @@ find_package(Eigen3 REQUIRED)
 find_package(sharedlib++ REQUIRED)
 find_package(orocos_kdl REQUIRED)
 
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
+find_package(RBDL REQUIRED)
+
 message("*************************${kdl_orocos_INCLUDE_DIRS}")
 include_directories(include ${XBotCoreModel_INCLUDE_DIRS} 
                             ${XBotInterface_INCLUDE_DIRS}
@@ -53,6 +56,8 @@ include_directories(include ${XBotCoreModel_INCLUDE_DIRS}
                             ${EIGEN3_INCLUDE_DIR}
                             ${CMAKE_SOURCE_DIR}/IXBotInterface/include
                             ${sharedlib++_INCLUDE_DIRS}
+                            ${RBDL_INCLUDE_DIR}
+                            ${RBDL_URDFReader_INCLUDE_DIR}
                             )
                             
 # for every file in INCLUDES CMake already sets the property HEADER_FILE_ONLY
@@ -64,6 +69,8 @@ add_library(ModelInterfaceRBDL SHARED ${ModelInterfaceRBDL_INCLUDES}
 target_link_libraries(ModelInterfaceRBDL ${XBotInterface_LIBRARIES}
                                         yaml-cpp 
                                         ${sharedlib++_LIBRARIES}
+                                        ${RBDL_LIBRARY}
+                                        ${RBDL_URDFReader_LIBRARY}
                                         )
                                        
 
