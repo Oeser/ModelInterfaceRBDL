@@ -35,46 +35,55 @@ class ModelInterfaceRBDL : public ModelInterface
 
 public:
     
-virtual void getCOM(KDL::Vector& com_position) const;
+    virtual void getCOM(KDL::Vector& com_position) const;
 
-virtual void getCOMJacobian(KDL::Jacobian& J) const;
+    virtual void getCOMJacobian(KDL::Jacobian& J) const;
 
-virtual void getCOMVelocity(KDL::Vector& velocity) const;
+    virtual void getCOMVelocity(KDL::Vector& velocity) const;
 
-virtual void getGravity(KDL::Vector& gravity) const;
+    virtual void getGravity(KDL::Vector& gravity) const;
 
-virtual void getModelID(std::vector< std::string >& joint_name) const;
+    virtual void getModelID(std::vector< std::string >& joint_name) const;
 
-virtual bool getPointJacobian(const std::string& link_name, const KDL::Vector& reference_point, KDL::Jacobian& J) const;
+    virtual bool getPointJacobian(const std::string& link_name, const KDL::Vector& reference_point, KDL::Jacobian& J) const;
 
-virtual bool getPose(const std::string& source_frame, KDL::Frame& pose) const;
+    virtual bool getPose(const std::string& source_frame, KDL::Frame& pose) const;
 
-virtual bool getPose(const std::string& source_frame, const std::string& target_frame, KDL::Frame& pose) const;
+    virtual bool getSpatialAcceleration(const std::string& link_name, KDL::Twist& acceleration) const;
 
-virtual bool getSpatialAcceleration(const std::string& link_name, KDL::Twist& acceleration) const;
+    virtual bool getSpatialVelocity(const std::string& link_name, KDL::Twist& velocity) const;
 
-virtual bool getSpatialVelocity(const std::string& link_name, KDL::Twist& velocity) const;
+    virtual bool setFloatingBasePose(const KDL::Frame& floating_base_pose);
 
-virtual bool init_model(const std::string& path_to_cfg);
+    virtual void setGravity(const KDL::Vector& gravity);
 
-virtual bool setFloatingBasePose(const KDL::Frame& floating_base_pose);
+    virtual bool update(bool update_position = true, bool update_velocity = false, bool update_desired_acceleration = false);
 
-virtual void setGravity(const KDL::Vector& gravity);
-
-virtual bool update(bool update_position = true, bool update_velocity = false, bool update_desired_acceleration = false);
 
 
 
 protected:
     
+    
+    virtual bool init_model(const std::string& path_to_cfg) final;
+    
 private:
     
     mutable RigidBodyDynamics::Model _rbdl_model;
     
-    Eigen::VectorXd _q, _qdot, _qddot, _tau; //TBD initialize
+    Eigen::VectorXd _q, _qdot, _qddot, _tau;
+    int _ndof;
+    
+    std::vector<std::string> _model_ordered_joint_names;
     
     mutable RigidBodyDynamics::Math::Vector3d _tmp_vector3d;
-    mutable RigidBodyDynamics::Math::MatrixNd _tmp_jacobian3, _tmp_jacobian3_1, _tmp_jacobian6;
+    mutable RigidBodyDynamics::Math::Matrix3d _tmp_matrix3d;
+    mutable RigidBodyDynamics::Math::MatrixNd _tmp_jacobian3, _tmp_jacobian6;
+    mutable KDL::Frame _tmp_kdl_frame;
+    
+    int linkId(const std::string& link_name) const;
+    int jointModelId(const std::string& joint_name) const;
+    
     
 
 };
