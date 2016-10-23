@@ -93,10 +93,12 @@ void XBot::ModelInterfaceRBDL::getCOMJacobian(KDL::Jacobian& J) const
 bool XBot::ModelInterfaceRBDL::getPose(const std::string& source_frame, KDL::Frame& pose) const
 {
     _tmp_vector3d.setZero();
-    _tmp_matrix3d = RigidBodyDynamics::CalcBodyWorldOrientation(_rbdl_model, _q, linkId(source_frame), false);
-    RigidBodyDynamics::CalcBodyToBaseCoordinates(_rbdl_model, _q, linkId(source_frame), _tmp_vector3d, false);
     
-    rotationEigenToKDL(_tmp_matrix3d, pose.M);
+    _tmp_matrix3d = RigidBodyDynamics::CalcBodyWorldOrientation(_rbdl_model, _q, linkId(source_frame), false);
+    
+    _tmp_vector3d = RigidBodyDynamics::CalcBodyToBaseCoordinates(_rbdl_model, _q, linkId(source_frame), _tmp_vector3d, false);
+    
+    rotationEigenToKDL(_tmp_matrix3d.transpose(), pose.M);
     tf::vectorEigenToKDL(_tmp_vector3d, pose.p);
     
     return true;
