@@ -56,6 +56,12 @@ public:
     virtual bool setFloatingBasePose(const KDL::Frame& floating_base_pose);
 
     virtual void setGravity(const KDL::Vector& gravity);
+    
+    virtual void computeGravityCompensation(Eigen::VectorXd& g) const;
+    
+    virtual void computeInverseDynamics(Eigen::VectorXd& tau) const;
+    
+    virtual void computeNonlinearTerm(Eigen::VectorXd& n) const;
 
     virtual bool update(bool update_position = true, bool update_velocity = false, bool update_desired_acceleration = false);
 

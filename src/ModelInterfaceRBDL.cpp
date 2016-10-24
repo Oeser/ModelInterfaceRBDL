@@ -213,5 +213,32 @@ void XBot::ModelInterfaceRBDL::setGravity(const KDL::Vector& gravity)
     tf::vectorKDLToEigen(gravity, _rbdl_model.gravity);
 }
 
+void XBot::ModelInterfaceRBDL::computeGravityCompensation(Eigen::VectorXd& g) const
+{
+    g.resize(_ndof);
+    
+    RigidBodyDynamics::NonlinearEffects(_rbdl_model,
+                                        _q,
+                                        _qdot*0,
+                                        g );
+}
+
+void XBot::ModelInterfaceRBDL::computeInverseDynamics(Eigen::VectorXd& tau) const
+{
+    tau.resize(_ndof);
+    RigidBodyDynamics::InverseDynamics(_rbdl_model, _q, _qdot, _qddot, tau);
+}
+
+void XBot::ModelInterfaceRBDL::computeNonlinearTerm(Eigen::VectorXd& n) const
+{
+    n.resize(_ndof);
+    
+    RigidBodyDynamics::NonlinearEffects(_rbdl_model,
+                                        _q,
+                                        _qdot,
+                                        n );
+}
+
+
 
 
