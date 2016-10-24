@@ -76,7 +76,7 @@ private:
     
     std::vector<std::string> _model_ordered_joint_names;
     
-    mutable RigidBodyDynamics::Math::Vector3d _tmp_vector3d;
+    mutable RigidBodyDynamics::Math::Vector3d _tmp_vector3d, _tmp_vector3d_1;
     mutable RigidBodyDynamics::Math::Matrix3d _tmp_matrix3d;
     mutable RigidBodyDynamics::Math::MatrixNd _tmp_jacobian3, _tmp_jacobian6;
     mutable KDL::Frame _tmp_kdl_frame;

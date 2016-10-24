@@ -94,9 +94,16 @@ bool XBot::ModelInterfaceRBDL::getPose(const std::string& source_frame, KDL::Fra
 {
     _tmp_vector3d.setZero();
     
-    _tmp_matrix3d = RigidBodyDynamics::CalcBodyWorldOrientation(_rbdl_model, _q, linkId(source_frame), false);
+    _tmp_matrix3d = RigidBodyDynamics::CalcBodyWorldOrientation(_rbdl_model, 
+                                                                _q, 
+                                                                linkId(source_frame), 
+                                                                false);
     
-    _tmp_vector3d = RigidBodyDynamics::CalcBodyToBaseCoordinates(_rbdl_model, _q, linkId(source_frame), _tmp_vector3d, false);
+    _tmp_vector3d = RigidBodyDynamics::CalcBodyToBaseCoordinates(_rbdl_model, 
+                                                                 _q, 
+                                                                 linkId(source_frame), 
+                                                                 _tmp_vector3d, 
+                                                                 false);
     
     rotationEigenToKDL(_tmp_matrix3d.transpose(), pose.M);
     tf::vectorEigenToKDL(_tmp_vector3d, pose.p);
@@ -150,12 +157,14 @@ bool XBot::ModelInterfaceRBDL::setFloatingBasePose(const KDL::Frame& floating_ba
 
 void XBot::ModelInterfaceRBDL::getCOMVelocity(KDL::Vector& velocity) const
 {
-
+    double mass;
+    RigidBodyDynamics::Utils::CalcCenterOfMass(_rbdl_model, _q, _qdot, mass, _tmp_vector3d, &_tmp_vector3d_1, nullptr, false);
+    tf::vectorEigenToKDL(_tmp_vector3d_1, velocity);
 }
 
 void XBot::ModelInterfaceRBDL::getGravity(KDL::Vector& gravity) const
 {
-
+    tf::vectorEigenToKDL(_rbdl_model.gravity, gravity);
 }
 
 bool XBot::ModelInterfaceRBDL::getSpatialAcceleration(const std::string& link_name, KDL::Twist& acceleration) const
@@ -165,13 +174,15 @@ bool XBot::ModelInterfaceRBDL::getSpatialAcceleration(const std::string& link_na
 
 bool XBot::ModelInterfaceRBDL::getSpatialVelocity(const std::string& link_name, KDL::Twist& velocity) const
 {
-    return false;
+    _tmp_vector3d.setZero();
+    tf::twistEigenToKDL(RigidBodyDynamics::CalcPointVelocity6D(_rbdl_model, _q, _qdot, linkId(link_name), _tmp_vector3d), velocity);
+    return true; // TBD check link exists
 }
 
 
 void XBot::ModelInterfaceRBDL::setGravity(const KDL::Vector& gravity)
 {
-
+    tf::vectorKDLToEigen(gravity, _rbdl_model.gravity);
 }
 
 
