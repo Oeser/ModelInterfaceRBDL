@@ -24,7 +24,7 @@ SHLIBPP_DEFINE_SHARED_SUBCLASS(model_interface_rbdl, XBot::ModelInterfaceRBDL, X
 bool XBot::ModelInterfaceRBDL::init_model(const std::string& path_to_cfg)
 {
     std::cout << "Initializing RBDL model!" << std::endl;
-    
+    std::cout << "Floating base model: " << (isFloatingBase() ? "TRUE" : "FALSE") << std::endl;
     // Init rbdl model with urdf
     if(!RigidBodyDynamics::Addons::URDFReadFromString(getUrdfString().c_str(), &_rbdl_model, isFloatingBase(), true)){
         std::cout << "ERROR in " << __func__ << ": RBDL model could not be initilized from given URDF string!" << std::endl;
@@ -51,11 +51,14 @@ bool XBot::ModelInterfaceRBDL::init_model(const std::string& path_to_cfg)
         _model_ordered_joint_names[joint_idx++] = "VIRTUALJOINT_6"; 
     }
     
-    for(int i = 0 ; i < _ndof; i++){
+    int link_id_offset = isFloatingBase() ? 2 : 0;
+    int dof_num_offset = isFloatingBase() ? -6 : 0;
+    for(int i = 0 ; i < (_ndof + dof_num_offset); i++){
         
-        
-        std::string joint_name = getUrdf().getLink(_rbdl_model.GetBodyName(i+1))->parent_joint->name;
-        int joint_model_id = _rbdl_model.mJoints[i+1].q_index;
+        std::string body_name(_rbdl_model.GetBodyName(i+link_id_offset+1));
+        urdf::LinkConstSharedPtr link_ptr = getUrdf().getLink(body_name);
+        std::string joint_name = link_ptr->parent_joint->name;
+        int joint_model_id = _rbdl_model.mJoints[i+link_id_offset+1].q_index;
         
         std::cout << "Joint name: " << joint_name << " RBDL ID: " << joint_model_id << std::endl;
         
@@ -115,7 +118,13 @@ bool XBot::ModelInterfaceRBDL::getPose(const std::string& source_frame, KDL::Fra
 
 int XBot::ModelInterfaceRBDL::linkId(const std::string& link_name) const
 {
-    return _rbdl_model.GetBodyId(link_name.c_str());
+    int body_id = _rbdl_model.GetBodyId(link_name.c_str());
+    if( std::numeric_limits<unsigned int>::max() ==  body_id ){
+        return -1;   
+    }
+    else{
+        return body_id;
+    }
 }
 
 bool XBot::ModelInterfaceRBDL::update(bool update_position, bool update_velocity, bool update_desired_acceleration)
@@ -133,10 +142,18 @@ bool XBot::ModelInterfaceRBDL::getPointJacobian(const std::string& link_name,
                                                 const KDL::Vector& reference_point, 
                                                 KDL::Jacobian& J) const
 {
+    int body_id = linkId(link_name);
+    if( body_id == -1 ){
+        std::cerr << "ERROR in " << __func__ << ": link " << link_name << " not defined in RBDL model!" << std::endl;
+        return false;
+    }
+    
     _tmp_jacobian6.setZero(6, _rbdl_model.dof_count);
     tf::vectorKDLToEigen(reference_point, _tmp_vector3d);
-    RigidBodyDynamics::CalcPointJacobian6D(_rbdl_model, _q, linkId(link_name), _tmp_vector3d, _tmp_jacobian6, false);
+    RigidBodyDynamics::CalcPointJacobian6D(_rbdl_model, _q, body_id, _tmp_vector3d, _tmp_jacobian6, false);
     J.data = _tmp_jacobian6;
+    
+    return true;
 }
 
 void XBot::ModelInterfaceRBDL::getModelID(std::vector< std::string >& joint_name) const
@@ -169,14 +186,25 @@ void XBot::ModelInterfaceRBDL::getGravity(KDL::Vector& gravity) const
 
 bool XBot::ModelInterfaceRBDL::getSpatialAcceleration(const std::string& link_name, KDL::Twist& acceleration) const
 {
+    int body_id = linkId(link_name);
+    if( body_id == -1 ){
+        std::cerr << "ERROR in " << __func__ << ": link " << link_name << " not defined in RBDL model!" << std::endl;
+        return false;
+    }
     return false;
 }
 
 bool XBot::ModelInterfaceRBDL::getSpatialVelocity(const std::string& link_name, KDL::Twist& velocity) const
 {
+    int body_id = linkId(link_name);
+    if( body_id == -1 ){
+        std::cerr << "ERROR in " << __func__ << ": link " << link_name << " not defined in RBDL model!" << std::endl;
+        return false;
+    }
+    
     _tmp_vector3d.setZero();
-    tf::twistEigenToKDL(RigidBodyDynamics::CalcPointVelocity6D(_rbdl_model, _q, _qdot, linkId(link_name), _tmp_vector3d), velocity);
-    return true; // TBD check link exists
+    tf::twistEigenToKDL(RigidBodyDynamics::CalcPointVelocity6D(_rbdl_model, _q, _qdot, body_id, _tmp_vector3d), velocity);
+    return true; 
 }
 
 
