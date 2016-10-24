@@ -45,7 +45,7 @@ public:
 
     virtual void getModelID(std::vector< std::string >& joint_name) const;
 
-    virtual bool getPointJacobian(const std::string& link_name, const KDL::Vector& reference_point, KDL::Jacobian& J) const;
+    virtual bool getJacobian(const std::string& link_name, const KDL::Vector& reference_point, KDL::Jacobian& J) const;
 
     virtual bool getPose(const std::string& source_frame, KDL::Frame& pose) const;
 
@@ -62,6 +62,16 @@ public:
     virtual void computeInverseDynamics(Eigen::VectorXd& tau) const;
     
     virtual void computeNonlinearTerm(Eigen::VectorXd& n) const;
+    
+    virtual bool computeJdotQdot(const std::__cxx11::string& link_name, const KDL::Vector& point, KDL::Vector& jdotqdot) const;
+        
+    virtual void getCOMAcceleration(KDL::Vector& acceleration) const;
+
+    virtual void getInertiaMatrix(Eigen::MatrixXd& M) const;
+
+    virtual bool getPointAcceleration(const std::string& link_name, 
+                                      const KDL::Vector& point, 
+                                      KDL::Vector& acceleration) const;
 
     virtual bool update(bool update_position = true, bool update_velocity = false, bool update_desired_acceleration = false);
 
