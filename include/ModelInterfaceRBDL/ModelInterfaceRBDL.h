@@ -63,7 +63,7 @@ public:
     
     virtual void computeNonlinearTerm(Eigen::VectorXd& n) const;
     
-    virtual bool computeJdotQdot(const std::__cxx11::string& link_name, const KDL::Vector& point, KDL::Vector& jdotqdot) const;
+    virtual bool computeJdotQdot(const std::string& link_name, const KDL::Vector& point, KDL::Twist& jdotqdot) const;
         
     virtual void getCOMAcceleration(KDL::Vector& acceleration) const;
 

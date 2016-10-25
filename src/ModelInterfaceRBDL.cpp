@@ -246,7 +246,7 @@ void XBot::ModelInterfaceRBDL::computeNonlinearTerm(Eigen::VectorXd& n) const
 
 bool XBot::ModelInterfaceRBDL::computeJdotQdot(const std::string& link_name, 
                                                const KDL::Vector& point, 
-                                               KDL::Vector& jdotqdot) const
+                                               KDL::Twist& jdotqdot) const
 {
     int body_id = linkId(link_name);
     if( body_id == -1 ){
@@ -255,7 +255,7 @@ bool XBot::ModelInterfaceRBDL::computeJdotQdot(const std::string& link_name,
     }
     
     tf::vectorKDLToEigen(point, _tmp_vector3d);
-    tf::vectorEigenToKDL( RigidBodyDynamics::CalcPointAcceleration(_rbdl_model, _q, _qdot, _qddot*0, body_id, _tmp_vector3d, false),
+    tf::twistEigenToKDL( RigidBodyDynamics::CalcPointAcceleration6D(_rbdl_model, _q, _qdot, _qddot*0, body_id, _tmp_vector3d, false),
                           jdotqdot );
     return true;
     
