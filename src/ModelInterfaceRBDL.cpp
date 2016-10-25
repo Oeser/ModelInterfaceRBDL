@@ -158,7 +158,7 @@ bool XBot::ModelInterfaceRBDL::getJacobian(const std::string& link_name,
     return true;
 }
 
-void XBot::ModelInterfaceRBDL::getModelID(std::vector< std::string >& joint_name) const
+void XBot::ModelInterfaceRBDL::getModelOrderedJoints(std::vector< std::string >& joint_name) const
 {
     joint_name = _model_ordered_joint_names;
 }

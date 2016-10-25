@@ -43,7 +43,7 @@ public:
 
     virtual void getGravity(KDL::Vector& gravity) const;
 
-    virtual void getModelID(std::vector< std::string >& joint_name) const;
+    virtual void getModelOrderedJoints(std::vector< std::string >& joint_name) const;
 
     virtual bool getJacobian(const std::string& link_name, const KDL::Vector& reference_point, KDL::Jacobian& J) const;
 
