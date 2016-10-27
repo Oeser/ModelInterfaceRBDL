@@ -37,6 +37,9 @@ bool XBot::ModelInterfaceRBDL::init_model(const std::string& path_to_cfg)
     _qdot.setZero(_ndof);
     _qddot.setZero(_ndof);
     _tau.setZero(_ndof);
+    _tmp_jacobian3.setZero(3, _ndof);
+    _tmp_jacobian6.setZero(6, _ndof);
+    
     
     // Fill model-ordered joint id vector
     _model_ordered_joint_names.resize(_ndof);
@@ -130,11 +133,23 @@ int XBot::ModelInterfaceRBDL::linkId(const std::string& link_name) const
 bool XBot::ModelInterfaceRBDL::update(bool update_position, bool update_velocity, bool update_desired_acceleration)
 {
     bool success = true;
-    success = success && getJointPosition(_q);
-    success = success && getJointVelocity(_qdot);
-    success = success && getJointEffort(_tau);
+    Eigen::VectorXd *q_ptr, *qdot_ptr, *qddot_ptr;
+    if(update_position){
+        success = success && getJointPosition(_q);
+        q_ptr = &_q;
+    }
+    if(update_velocity){ 
+        success = success && getJointVelocity(_qdot);
+        qdot_ptr = &_qdot;
+    }
+    if(update_desired_acceleration){
+        success = success && getJointEffort(_tau);
+        qddot_ptr = &_qddot;
+    }
+    
     // TBD what to do with acceleration??????
-    RigidBodyDynamics::UpdateKinematics(_rbdl_model, _q, _qdot, _qddot);
+    
+    RigidBodyDynamics::UpdateKinematicsCustom(_rbdl_model, q_ptr, qdot_ptr, qddot_ptr);
     return success;
 }
 
