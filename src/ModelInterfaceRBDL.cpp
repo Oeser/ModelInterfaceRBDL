@@ -26,7 +26,7 @@ bool XBot::ModelInterfaceRBDL::init_model(const std::string& path_to_cfg)
     std::cout << "Initializing RBDL model!" << std::endl;
     std::cout << "Floating base model: " << (isFloatingBase() ? "TRUE" : "FALSE") << std::endl;
     // Init rbdl model with urdf
-    if(!RigidBodyDynamics::Addons::URDFReadFromString(getUrdfString().c_str(), &_rbdl_model, isFloatingBase(), true)){
+    if(!RigidBodyDynamics::Addons::URDFReadFromString(getUrdfString().c_str(), &_rbdl_model, isFloatingBase(), false)){
         std::cout << "ERROR in " << __func__ << ": RBDL model could not be initilized from given URDF string!" << std::endl;
         return false;
     }
@@ -133,7 +133,7 @@ int XBot::ModelInterfaceRBDL::linkId(const std::string& link_name) const
 bool XBot::ModelInterfaceRBDL::update(bool update_position, bool update_velocity, bool update_desired_acceleration)
 {
     bool success = true;
-    Eigen::VectorXd *q_ptr, *qdot_ptr, *qddot_ptr;
+    Eigen::VectorXd *q_ptr = nullptr, *qdot_ptr = nullptr, *qddot_ptr = nullptr;
     if(update_position){
         success = success && getJointPosition(_q);
         q_ptr = &_q;
@@ -150,6 +150,7 @@ bool XBot::ModelInterfaceRBDL::update(bool update_position, bool update_velocity
     // TBD what to do with acceleration??????
     
     RigidBodyDynamics::UpdateKinematicsCustom(_rbdl_model, q_ptr, qdot_ptr, qddot_ptr);
+//     RigidBodyDynamics::UpdateKinematics(_rbdl_model, _q, _qdot, _qddot);
     return success;
 }
 
