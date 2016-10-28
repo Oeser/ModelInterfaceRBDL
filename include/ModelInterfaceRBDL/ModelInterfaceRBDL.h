@@ -49,9 +49,9 @@ public:
 
     virtual bool getPose(const std::string& source_frame, KDL::Frame& pose) const;
 
-    virtual bool getSpatialAcceleration(const std::string& link_name, KDL::Twist& acceleration) const;
+    virtual bool getAccelerationTwist(const std::string& link_name, KDL::Twist& acceleration) const;
 
-    virtual bool getSpatialVelocity(const std::string& link_name, KDL::Twist& velocity) const;
+    virtual bool getVelocityTwist(const std::string& link_name, KDL::Twist& velocity) const;
 
     virtual bool setFloatingBasePose(const KDL::Frame& floating_base_pose);
 
@@ -73,7 +73,9 @@ public:
                                       const KDL::Vector& point, 
                                       KDL::Vector& acceleration) const;
 
-    virtual bool update(bool update_position = true, bool update_velocity = false, bool update_desired_acceleration = false);
+    virtual bool update(bool update_position = true, 
+                        bool update_velocity = false, 
+                        bool update_desired_acceleration = false);
 
 
 
@@ -96,6 +98,8 @@ private:
     mutable RigidBodyDynamics::Math::Matrix3d _tmp_matrix3d;
     mutable RigidBodyDynamics::Math::MatrixNd _tmp_jacobian3, _tmp_jacobian6;
     mutable KDL::Frame _tmp_kdl_frame;
+    
+    Eigen::Matrix<double, 6, 6> _row_inversion;
     
     int linkId(const std::string& link_name) const;
     int jointModelId(const std::string& joint_name) const;
