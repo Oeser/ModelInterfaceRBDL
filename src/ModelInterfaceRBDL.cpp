@@ -100,25 +100,33 @@ void XBot::ModelInterfaceRBDL::getCOMJacobian(KDL::Jacobian& J) const
 
 bool XBot::ModelInterfaceRBDL::getPose(const std::string& source_frame, KDL::Frame& pose) const
 {
+    
+    int body_id = linkId(source_frame);
+    if( body_id == -1 ){
+        std::cerr << "ERROR in " << __func__ << ": link " << source_frame << " not defined in RBDL model!" << std::endl;
+        return false;
+    }
+    
     _tmp_vector3d.setZero();
     
     _tmp_matrix3d = RigidBodyDynamics::CalcBodyWorldOrientation(_rbdl_model, 
                                                                 _q, 
-                                                                linkId(source_frame), 
+                                                                body_id, 
                                                                 false);
     
     _tmp_vector3d = RigidBodyDynamics::CalcBodyToBaseCoordinates(_rbdl_model, 
                                                                  _q, 
-                                                                 linkId(source_frame), 
+                                                                 body_id, 
                                                                  _tmp_vector3d, 
                                                                  false);
     
-    rotationEigenToKDL(_tmp_matrix3d.transpose(), pose.M);
+    _tmp_matrix3d.transposeInPlace();
+    
+    rotationEigenToKDL(_tmp_matrix3d, pose.M);
     tf::vectorEigenToKDL(_tmp_vector3d, pose.p);
     
     return true;
     
-    // TBD check for link existence
 }
 
 int XBot::ModelInterfaceRBDL::linkId(const std::string& link_name) const
@@ -142,6 +150,10 @@ bool XBot::ModelInterfaceRBDL::update(bool update_position, bool update_velocity
     }
     if(update_velocity){ 
         success = success && getJointVelocity(_qdot);
+        qdot_ptr = &_qdot;
+    }
+    else{
+        _qdot.setZero(_ndof);
         qdot_ptr = &_qdot;
     }
     if(update_desired_acceleration){
@@ -169,9 +181,9 @@ bool XBot::ModelInterfaceRBDL::getJacobian(const std::string& link_name,
     _tmp_jacobian6.setZero(6, _rbdl_model.dof_count);
     tf::vectorKDLToEigen(reference_point, _tmp_vector3d);
     RigidBodyDynamics::CalcPointJacobian6D(_rbdl_model, _q, body_id, _tmp_vector3d, _tmp_jacobian6, false);
-    J.data.resize(Eigen::NoChange, _ndof);
-    J.data.block(0, 0, 3, _ndof) = _tmp_jacobian6.block(3, 0, 3, _ndof);
-    J.data.block(3, 0, 3, _ndof) = _tmp_jacobian6.block(0, 0, 3, _ndof);
+    J.data.noalias() = _row_inversion * _tmp_jacobian6;
+//     J.data.block(0, 0, 3, _ndof) = _tmp_jacobian6.block(3, 0, 3, _ndof);
+//     J.data.block(3, 0, 3, _ndof) = _tmp_jacobian6.block(0, 0, 3, _ndof);
     
     return true;
 }
