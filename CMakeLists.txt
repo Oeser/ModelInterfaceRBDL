@@ -45,7 +45,7 @@ endif()
 find_package(XBotCoreModel REQUIRED)
 find_package(XBotInterface REQUIRED)
 find_package(Eigen3 REQUIRED)
-find_package(sharedlib++ REQUIRED)
+find_package(sharedlibpp REQUIRED)
 find_package(orocos_kdl REQUIRED)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
@@ -55,7 +55,7 @@ include_directories(include ${XBotCoreModel_INCLUDE_DIRS}
                             ${XBotInterface_INCLUDE_DIRS}
                             ${orocos_kdl_INCLUDE_DIRS}
                             ${EIGEN3_INCLUDE_DIR}
-                            ${sharedlib++_INCLUDE_DIRS}
+                            ${sharedlibpp_INCLUDE_DIRS}
                             ${RBDL_INCLUDE_DIR}
                             ${RBDL_URDFReader_INCLUDE_DIR}
                             )
@@ -68,7 +68,7 @@ add_library(ModelInterfaceRBDL SHARED ${ModelInterfaceRBDL_INCLUDES}
                                  
 target_link_libraries(ModelInterfaceRBDL ${XBotInterface_LIBRARIES}
                                         yaml-cpp 
-                                        ${sharedlib++_LIBRARIES}
+                                        ${sharedlibpp_LIBRARIES}
                                         ${RBDL_LIBRARY}
                                         ${RBDL_URDFReader_LIBRARY}
                                         )
