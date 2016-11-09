@@ -145,26 +145,21 @@ bool XBot::ModelInterfaceRBDL::update(bool update_position, bool update_velocity
     bool success = true;
     Eigen::VectorXd *q_ptr = nullptr, *qdot_ptr = nullptr, *qddot_ptr = nullptr;
     if(update_position){
-        success = success && getJointPosition(_q);
+        success = getJointPosition(_q) && success;
         q_ptr = &_q;
     }
     if(update_velocity){ 
-        success = success && getJointVelocity(_qdot);
-        qdot_ptr = &_qdot;
-    }
-    else{
-        _qdot.setZero(_ndof);
+        success = getJointVelocity(_qdot) && success;
         qdot_ptr = &_qdot;
     }
     if(update_desired_acceleration){
-        success = success && getJointEffort(_tau);
+        success = getJointAcceleration(_qddot) && success;
         qddot_ptr = &_qddot;
     }
+
     
-    // TBD what to do with acceleration??????
-    
-    RigidBodyDynamics::UpdateKinematicsCustom(_rbdl_model, q_ptr, qdot_ptr, qddot_ptr);
-//     RigidBodyDynamics::UpdateKinematics(_rbdl_model, _q, _qdot, _qddot);
+//     RigidBodyDynamics::UpdateKinematicsCustom(_rbdl_model, q_ptr, qdot_ptr, qddot_ptr);
+    RigidBodyDynamics::UpdateKinematics(_rbdl_model, _q, _qdot, _qddot);
     return success;
 }
 
@@ -180,10 +175,10 @@ bool XBot::ModelInterfaceRBDL::getJacobian(const std::string& link_name,
     
     _tmp_jacobian6.setZero(6, _rbdl_model.dof_count);
     tf::vectorKDLToEigen(reference_point, _tmp_vector3d);
+    
     RigidBodyDynamics::CalcPointJacobian6D(_rbdl_model, _q, body_id, _tmp_vector3d, _tmp_jacobian6, false);
+    
     J.data.noalias() = _row_inversion * _tmp_jacobian6;
-//     J.data.block(0, 0, 3, _ndof) = _tmp_jacobian6.block(3, 0, 3, _ndof);
-//     J.data.block(3, 0, 3, _ndof) = _tmp_jacobian6.block(0, 0, 3, _ndof);
     
     return true;
 }
@@ -315,6 +310,7 @@ void XBot::ModelInterfaceRBDL::getCOMAcceleration(KDL::Vector& acceleration) con
 
 void XBot::ModelInterfaceRBDL::getInertiaMatrix(Eigen::MatrixXd& M) const
 {
+    M.resize(_ndof, _ndof);
     RigidBodyDynamics::CompositeRigidBodyAlgorithm(_rbdl_model, _q, M, false);
 }
 
