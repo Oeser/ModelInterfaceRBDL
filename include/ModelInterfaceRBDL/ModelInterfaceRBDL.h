@@ -91,6 +91,7 @@ private:
     
     Eigen::VectorXd _q, _qdot, _qddot, _tau;
     int _ndof;
+    Eigen::VectorXd _zeros;
     
     std::vector<std::string> _model_ordered_joint_names;
     
