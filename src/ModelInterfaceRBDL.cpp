@@ -230,7 +230,7 @@ bool XBot::ModelInterfaceRBDL::setFloatingBasePose(const KDL::Frame& floating_ba
                                           Eigen::Vector3d(0,0,0) );
     
     _q.head(3) = _tmp_vector3d - current_origin;
-
+    // a
     return true;
 }
 
