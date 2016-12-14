@@ -193,7 +193,12 @@ bool XBot::ModelInterfaceRBDL::getJacobian(const std::string& link_name,
     
     RigidBodyDynamics::CalcPointJacobian6D(_rbdl_model, _q, body_id, _tmp_vector3d, _tmp_jacobian6, false);
     
-    J.data.noalias() = _row_inversion * _tmp_jacobian6;
+//     J.data.noalias() = _row_inversion * _tmp_jacobian6;
+    
+    J.data.resize(6, _rbdl_model.dof_count);
+    
+    J.data.topRows(3) = _tmp_jacobian6.bottomRows(3);
+    J.data.bottomRows(3) = _tmp_jacobian6.topRows(3);
     
     return true;
 }
