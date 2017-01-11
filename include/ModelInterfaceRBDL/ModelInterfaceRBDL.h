@@ -77,6 +77,8 @@ public:
                         bool update_velocity = false, 
                         bool update_desired_acceleration = false);
 
+    virtual int getLinkID(const std::string &link_name) const;
+
 
 
 

@@ -369,6 +369,13 @@ bool XBot::ModelInterfaceRBDL::getPointAcceleration(const std::string& link_name
     return true;
 }
 
+int XBot::ModelInterfaceRBDL::getLinkID(const std::string &link_name) const
+{
+    unsigned int id = _rbdl_model.GetBodyId(link_name.c_str());
+    if(id == std::numeric_limits<unsigned int>::max())
+        return -1;
+    return id;
+}
 
 
 
