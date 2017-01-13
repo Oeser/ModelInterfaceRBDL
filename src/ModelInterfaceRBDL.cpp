@@ -350,7 +350,7 @@ void XBot::ModelInterfaceRBDL::getCOMAcceleration(KDL::Vector& acceleration) con
 
 void XBot::ModelInterfaceRBDL::getInertiaMatrix(Eigen::MatrixXd& M) const
 {
-    M.resize(_ndof, _ndof);
+    M.setZero(_ndof, _ndof);
     RigidBodyDynamics::CompositeRigidBodyAlgorithm(_rbdl_model, _q, M, false);
 }
 
