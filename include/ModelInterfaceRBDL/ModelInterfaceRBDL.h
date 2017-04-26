@@ -34,7 +34,7 @@ class ModelInterfaceRBDL : public ModelInterface
 {
 
 public:
-    
+
     virtual void getCOM(KDL::Vector& com_position) const;
 
     virtual void getCOMJacobian(KDL::Jacobian& J) const;
@@ -56,25 +56,27 @@ public:
     virtual bool setFloatingBasePose(const KDL::Frame& floating_base_pose);
 
     virtual void setGravity(const KDL::Vector& gravity);
-    
+
     virtual void computeGravityCompensation(Eigen::VectorXd& g) const;
-    
+
+    virtual void getCentroidalMomentum(Eigen::Vector6d& centroidal_momentum);
+
     virtual void computeInverseDynamics(Eigen::VectorXd& tau) const;
-    
+
     virtual void computeNonlinearTerm(Eigen::VectorXd& n) const;
-    
+
     virtual bool computeJdotQdot(const std::string& link_name, const KDL::Vector& point, KDL::Twist& jdotqdot) const;
-        
+
     virtual void getCOMAcceleration(KDL::Vector& acceleration) const;
 
     virtual void getInertiaMatrix(Eigen::MatrixXd& M) const;
 
-    virtual bool getPointAcceleration(const std::string& link_name, 
-                                      const KDL::Vector& point, 
+    virtual bool getPointAcceleration(const std::string& link_name,
+                                      const KDL::Vector& point,
                                       KDL::Vector& acceleration) const;
 
-    virtual bool update(bool update_position = true, 
-                        bool update_velocity = false, 
+    virtual bool update(bool update_position = true,
+                        bool update_velocity = false,
                         bool update_desired_acceleration = false);
 
     virtual int getLinkID(const std::string &link_name) const;
@@ -83,31 +85,31 @@ public:
 
 
 protected:
-    
-    
+
+
     virtual bool init_model(const std::string& path_to_cfg) final;
-    
+
 private:
-    
+
     mutable RigidBodyDynamics::Model _rbdl_model;
-    
+
     Eigen::VectorXd _q, _qdot, _qddot, _tau;
     int _ndof;
     Eigen::VectorXd _zeros;
-    
+
     std::vector<std::string> _model_ordered_joint_names;
-    
+
     mutable RigidBodyDynamics::Math::Vector3d _tmp_vector3d, _tmp_vector3d_1;
     mutable RigidBodyDynamics::Math::Matrix3d _tmp_matrix3d;
     mutable RigidBodyDynamics::Math::MatrixNd _tmp_jacobian3, _tmp_jacobian6;
     mutable KDL::Frame _tmp_kdl_frame;
-    
+
     Eigen::Matrix<double, 6, 6> _row_inversion;
-    
+
     int linkId(const std::string& link_name) const;
     int jointModelId(const std::string& joint_name) const;
-    
-    
+
+
 
 };
 
