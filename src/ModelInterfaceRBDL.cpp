@@ -149,7 +149,15 @@ bool XBot::ModelInterfaceRBDL::getPose(const std::string& source_frame, KDL::Fra
 
 int XBot::ModelInterfaceRBDL::linkId(const std::string& link_name) const
 {
-    int body_id = _rbdl_model.GetBodyId(link_name.c_str());
+    int body_id;
+
+    if(link_name == "world"){
+        body_id = _rbdl_model.GetBodyId("ROOT");
+    }
+    else{
+        body_id = _rbdl_model.GetBodyId(link_name.c_str());
+    }
+
     if( std::numeric_limits<unsigned int>::max() ==  body_id ){
         return -1;
     }
