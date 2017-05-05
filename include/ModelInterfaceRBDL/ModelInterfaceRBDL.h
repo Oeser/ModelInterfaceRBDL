@@ -81,6 +81,10 @@ public:
 
     virtual int getLinkID(const std::string &link_name) const;
 
+    virtual double getMass() const;
+
+
+
 
 
 
@@ -96,6 +100,8 @@ private:
     Eigen::VectorXd _q, _qdot, _qddot, _tau;
     int _ndof;
     Eigen::VectorXd _zeros;
+
+    double _mass;
 
     std::vector<std::string> _model_ordered_joint_names;
 

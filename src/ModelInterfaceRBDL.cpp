@@ -77,6 +77,9 @@ bool XBot::ModelInterfaceRBDL::init_model(const std::string& path_to_cfg)
 
     }
 
+    // Fill robot mass
+    RigidBodyDynamics::Utils::CalcCenterOfMass(_rbdl_model, _q, _qdot, _mass, _tmp_vector3d, nullptr, nullptr, false);
+
     return true;
 }
 
@@ -387,5 +390,9 @@ void XBot::ModelInterfaceRBDL::getCentroidalMomentum(Eigen::Vector6d& centroidal
     centroidal_momentum.tail<3>() = _tmp_vector3d_1;
 }
 
+double XBot::ModelInterfaceRBDL::getMass() const
+{
+    return _mass;
+}
 
 
