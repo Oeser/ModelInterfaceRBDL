@@ -270,7 +270,7 @@ bool XBot::ModelInterfaceRBDL::getAccelerationTwist(const std::string& link_name
         return false;
     }
     _tmp_vector3d.setZero();
-    tf::twistEigenToKDL( _row_inversion*RigidBodyDynamics::CalcPointAcceleration6D(_rbdl_model, _q, _qdot, _qddot, body_id, _tmp_vector3d, false),
+    tf::twistEigenToKDL( _row_inversion*RigidBodyDynamics::CalcPointAcceleration6D(_rbdl_model, _q, _qdot, _qddot, body_id, _tmp_vector3d, true),
                         acceleration );
     return true;
 }
@@ -331,7 +331,7 @@ bool XBot::ModelInterfaceRBDL::computeJdotQdot(const std::string& link_name,
     }
 
     tf::vectorKDLToEigen(point, _tmp_vector3d);
-    tf::twistEigenToKDL( _row_inversion*RigidBodyDynamics::CalcPointAcceleration6D(_rbdl_model, _q, _qdot, _qddot*0, body_id, _tmp_vector3d, false),
+    tf::twistEigenToKDL( _row_inversion*RigidBodyDynamics::CalcPointAcceleration6D(_rbdl_model, _q, _qdot, _qddot*0, body_id, _tmp_vector3d, true),
                           jdotqdot );
     return true;
 
@@ -342,6 +342,8 @@ void XBot::ModelInterfaceRBDL::getCOMAcceleration(KDL::Vector& acceleration) con
     double mass = 0;
     int body_id = 0;
     _tmp_vector3d.setZero();
+
+    RigidBodyDynamics::UpdateKinematics(_rbdl_model, _q, _qdot, _qddot);
 
     for( const RigidBodyDynamics::Body& body : _rbdl_model.mBodies ){
 
@@ -374,8 +376,9 @@ bool XBot::ModelInterfaceRBDL::getPointAcceleration(const std::string& link_name
         std::cerr << "ERROR in " << __func__ << ": link " << link_name << " not defined in RBDL model!" << std::endl;
         return false;
     }
+
     tf::vectorKDLToEigen(point, _tmp_vector3d);
-    tf::vectorEigenToKDL( RigidBodyDynamics::CalcPointAcceleration(_rbdl_model, _q, _qdot, _qddot, body_id, _tmp_vector3d, false),
+    tf::vectorEigenToKDL( RigidBodyDynamics::CalcPointAcceleration(_rbdl_model, _q, _qdot, _qddot, body_id, _tmp_vector3d, true),
                           acceleration );
     return true;
 }
