@@ -80,6 +80,13 @@ bool XBot::ModelInterfaceRBDL::init_model(const std::string& path_to_cfg)
     // Fill robot mass
     RigidBodyDynamics::Utils::CalcCenterOfMass(_rbdl_model, _q, _qdot, _mass, _tmp_vector3d, nullptr, nullptr, false);
 
+//     std::cout << RigidBodyDynamics::Utils::GetModelHierarchy(_rbdl_model) << std::endl;
+
+    _fb_origin_offset = RigidBodyDynamics::CalcBodyToBaseCoordinates(_rbdl_model, _q*0, 2, Eigen::Vector3d::Zero(), true);
+    if(isFloatingBase()){
+        std::cout << "Floating base origin offset: " << _fb_origin_offset.transpose() << std::endl;
+    }
+
     return true;
 }
 
@@ -238,14 +245,16 @@ bool XBot::ModelInterfaceRBDL::setFloatingBasePose(const KDL::Frame& floating_ba
     Eigen::AngleAxisd::RotationMatrixType aa_rot(_tmp_matrix3d);
     _q.segment(3,3) = aa_rot.eulerAngles(0,1,2);
 
-    int floating_base_body_id = 6;
+    int floating_base_body_id = 2;
 
     Eigen::Vector3d current_origin = RigidBodyDynamics::CalcBodyToBaseCoordinates(_rbdl_model,
                                           _zeros,
                                           floating_base_body_id,
                                           Eigen::Vector3d(0,0,0) );
 
-    _q.head(3) = _tmp_vector3d - current_origin;
+    _q.head(3) = _tmp_vector3d - _fb_origin_offset;
+
+    chain("virtual_chain").setJointPosition(_q.head<6>());
     // a
     return true;
 }

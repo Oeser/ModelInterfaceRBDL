@@ -98,6 +98,7 @@ private:
     mutable RigidBodyDynamics::Model _rbdl_model;
 
     Eigen::VectorXd _q, _qdot, _qddot, _tau;
+    Eigen::Vector3d _fb_origin_offset;
     int _ndof;
     Eigen::VectorXd _zeros;
 
