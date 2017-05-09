@@ -55,6 +55,8 @@ public:
 
     virtual bool setFloatingBasePose(const KDL::Frame& floating_base_pose);
 
+    virtual bool setFloatingBaseTwist(const KDL::Twist& floating_base_twist);
+
     virtual void setGravity(const KDL::Vector& gravity);
 
     virtual void computeGravityCompensation(Eigen::VectorXd& g) const;

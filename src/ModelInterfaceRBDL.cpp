@@ -18,6 +18,9 @@
 */
 
 #include <ModelInterfaceRBDL/ModelInterfaceRBDL.h>
+#include <Eigen/QR>
+
+#define FLOATING_BASE_BODY_ID 2
 
 SHLIBPP_DEFINE_SHARED_SUBCLASS(model_interface_rbdl, XBot::ModelInterfaceRBDL, XBot::ModelInterface);
 
@@ -82,13 +85,40 @@ bool XBot::ModelInterfaceRBDL::init_model(const std::string& path_to_cfg)
 
 //     std::cout << RigidBodyDynamics::Utils::GetModelHierarchy(_rbdl_model) << std::endl;
 
-    _fb_origin_offset = RigidBodyDynamics::CalcBodyToBaseCoordinates(_rbdl_model, _q*0, 2, Eigen::Vector3d::Zero(), true);
+    _fb_origin_offset = RigidBodyDynamics::CalcBodyToBaseCoordinates(_rbdl_model, _q*0, FLOATING_BASE_BODY_ID, Eigen::Vector3d::Zero(), true);
     if(isFloatingBase()){
         std::cout << "Floating base origin offset: " << _fb_origin_offset.transpose() << std::endl;
     }
 
     return true;
 }
+
+bool XBot::ModelInterfaceRBDL::setFloatingBaseTwist(const KDL::Twist& floating_base_twist)
+{
+    if(!isFloatingBase()){
+        std::cerr << "ERROR in " << __func__ << "! Model is NOT floating base!" << std::endl;
+        return false;
+    }
+
+    _tmp_jacobian6.setZero(6, _rbdl_model.qdot_size);
+
+    Eigen::Vector6d fb_twist_eigen;
+    tf::twistKDLToEigen(floating_base_twist, fb_twist_eigen);
+
+    RigidBodyDynamics::CalcPointJacobian6D(_rbdl_model, _q, FLOATING_BASE_BODY_ID, Eigen::Vector3d::Zero(), _tmp_jacobian6, false);
+
+//     std::cout << "****************\n" << _tmp_jacobian6 << std::endl;
+
+    Eigen::Matrix3d Tphi = _tmp_jacobian6.block<3, 3>(0, 3);
+//     std::cout << "****************\n" << Tphi << std::endl;
+    _qdot.segment<3>(3) = Tphi.colPivHouseholderQr().solve(fb_twist_eigen.tail<3>());
+    _qdot.head<3>() = fb_twist_eigen.head<3>();
+
+    chain("virtual_chain").setJointVelocity(_qdot.head(6));
+
+    return true;
+}
+
 
 void XBot::ModelInterfaceRBDL::getCOM(KDL::Vector& com_position) const
 {
@@ -245,7 +275,7 @@ bool XBot::ModelInterfaceRBDL::setFloatingBasePose(const KDL::Frame& floating_ba
     Eigen::AngleAxisd::RotationMatrixType aa_rot(_tmp_matrix3d);
     _q.segment(3,3) = aa_rot.eulerAngles(0,1,2);
 
-    int floating_base_body_id = 2;
+    int floating_base_body_id = FLOATING_BASE_BODY_ID;
 
     Eigen::Vector3d current_origin = RigidBodyDynamics::CalcBodyToBaseCoordinates(_rbdl_model,
                                           _zeros,
