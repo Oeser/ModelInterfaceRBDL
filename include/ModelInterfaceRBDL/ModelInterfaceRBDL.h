@@ -85,6 +85,7 @@ public:
 
     virtual double getMass() const;
 
+    virtual bool getFloatingBaseLink(std::string& floating_base_link) const;
 
 
 
@@ -103,6 +104,9 @@ private:
     Eigen::Vector3d _fb_origin_offset;
     int _ndof;
     Eigen::VectorXd _zeros;
+
+    std::string _floating_base_link;
+    int _floating_base_link_id;
 
     double _mass;
 

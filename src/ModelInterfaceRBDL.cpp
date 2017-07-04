@@ -20,7 +20,6 @@
 #include <ModelInterfaceRBDL/ModelInterfaceRBDL.h>
 #include <Eigen/QR>
 
-#define FLOATING_BASE_BODY_ID 2
 
 SHLIBPP_DEFINE_SHARED_SUBCLASS(model_interface_rbdl, XBot::ModelInterfaceRBDL, XBot::ModelInterface);
 
@@ -51,6 +50,9 @@ bool XBot::ModelInterfaceRBDL::init_model(const std::string& path_to_cfg)
     _model_ordered_joint_names.resize(_ndof);
     int joint_idx = 0;
 
+    _floating_base_link_id = 0;
+    _floating_base_link = "";
+
     if( isFloatingBase() ){
         _model_ordered_joint_names[joint_idx++] = "VIRTUALJOINT_1";
         _model_ordered_joint_names[joint_idx++] = "VIRTUALJOINT_2";
@@ -58,6 +60,9 @@ bool XBot::ModelInterfaceRBDL::init_model(const std::string& path_to_cfg)
         _model_ordered_joint_names[joint_idx++] = "VIRTUALJOINT_4";
         _model_ordered_joint_names[joint_idx++] = "VIRTUALJOINT_5";
         _model_ordered_joint_names[joint_idx++] = "VIRTUALJOINT_6";
+
+        _floating_base_link_id = 2;
+        _floating_base_link = _rbdl_model.GetBodyName(_floating_base_link_id);
     }
 
     int link_id_offset = isFloatingBase() ? 2 : 0;
@@ -85,7 +90,7 @@ bool XBot::ModelInterfaceRBDL::init_model(const std::string& path_to_cfg)
 
 //     std::cout << RigidBodyDynamics::Utils::GetModelHierarchy(_rbdl_model) << std::endl;
 
-    _fb_origin_offset = RigidBodyDynamics::CalcBodyToBaseCoordinates(_rbdl_model, _q*0, FLOATING_BASE_BODY_ID, Eigen::Vector3d::Zero(), true);
+    _fb_origin_offset = RigidBodyDynamics::CalcBodyToBaseCoordinates(_rbdl_model, _q*0, _floating_base_link_id, Eigen::Vector3d::Zero(), true);
     if(isFloatingBase()){
         std::cout << "Floating base origin offset: " << _fb_origin_offset.transpose() << std::endl;
     }
@@ -105,7 +110,8 @@ bool XBot::ModelInterfaceRBDL::setFloatingBaseTwist(const KDL::Twist& floating_b
     Eigen::Vector6d fb_twist_eigen;
     tf::twistKDLToEigen(floating_base_twist, fb_twist_eigen);
 
-    RigidBodyDynamics::CalcPointJacobian6D(_rbdl_model, _q, FLOATING_BASE_BODY_ID, Eigen::Vector3d::Zero(), _tmp_jacobian6, false);
+
+    RigidBodyDynamics::CalcPointJacobian6D(_rbdl_model, _q, _floating_base_link_id, Eigen::Vector3d::Zero(), _tmp_jacobian6, false);
 
 //     std::cout << "****************\n" << _tmp_jacobian6 << std::endl;
 
@@ -275,11 +281,9 @@ bool XBot::ModelInterfaceRBDL::setFloatingBasePose(const KDL::Frame& floating_ba
     Eigen::AngleAxisd::RotationMatrixType aa_rot(_tmp_matrix3d);
     _q.segment(3,3) = aa_rot.eulerAngles(0,1,2);
 
-    int floating_base_body_id = FLOATING_BASE_BODY_ID;
-
     Eigen::Vector3d current_origin = RigidBodyDynamics::CalcBodyToBaseCoordinates(_rbdl_model,
                                           _zeros,
-                                          floating_base_body_id,
+                                          _floating_base_link_id,
                                           Eigen::Vector3d(0,0,0) );
 
     _q.head(3) = _tmp_vector3d - _fb_origin_offset;
@@ -443,6 +447,15 @@ void XBot::ModelInterfaceRBDL::getCentroidalMomentum(Eigen::Vector6d& centroidal
 double XBot::ModelInterfaceRBDL::getMass() const
 {
     return _mass;
+}
+
+bool XBot::ModelInterfaceRBDL::getFloatingBaseLink(std::string& floating_base_link) const
+{
+    if(!isFloatingBase()){
+        return false;
+    }
+
+    floating_base_link = _floating_base_link;
 }
 
 
