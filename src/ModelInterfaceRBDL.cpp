@@ -435,7 +435,7 @@ int XBot::ModelInterfaceRBDL::getLinkID(const std::string &link_name) const
 }
 
 
-void XBot::ModelInterfaceRBDL::getCentroidalMomentum(Eigen::Vector6d& centroidal_momentum)
+void XBot::ModelInterfaceRBDL::getCentroidalMomentum(Eigen::Vector6d& centroidal_momentum) const
 {
     double mass;
     RigidBodyDynamics::Math::Vector3d tmp_2;
