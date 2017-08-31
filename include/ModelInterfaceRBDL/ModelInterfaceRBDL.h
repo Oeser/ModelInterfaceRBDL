@@ -121,6 +121,7 @@ private:
 
     Eigen::Matrix<double, 6, 6> _row_inversion;
 
+
     int linkId(const std::string& link_name) const;
     int jointModelId(const std::string& joint_name) const;
 
