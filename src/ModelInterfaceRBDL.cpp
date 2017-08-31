@@ -95,7 +95,6 @@ bool XBot::ModelInterfaceRBDL::init_model(const std::string& path_to_cfg)
         std::cout << "Floating base origin offset: " << _fb_origin_offset.transpose() << std::endl;
     }
 
-
     return true;
 }
 
@@ -230,8 +229,6 @@ bool XBot::ModelInterfaceRBDL::update(bool update_position, bool update_velocity
 
 //     RigidBodyDynamics::UpdateKinematicsCustom(_rbdl_model, q_ptr, qdot_ptr, qddot_ptr);
     RigidBodyDynamics::UpdateKinematics(_rbdl_model, _q, _qdot, _qddot);
-
-
     return success;
 }
 
@@ -415,15 +412,7 @@ void XBot::ModelInterfaceRBDL::getInertiaMatrix(Eigen::MatrixXd& M) const
 
 void XBot::ModelInterfaceRBDL::getInertiaInverseTimesVector(const Eigen::VectorXd& vec, Eigen::VectorXd& minv_vec) const
 {
-    minv_vec.setZero(getJointNum());
-
-    ///TODO: REMOVE THIS SHIT!
-    RigidBodyDynamics::UpdateKinematics(_rbdl_model, _q, _qdot*0.0, _qddot);
-
-    RigidBodyDynamics::CalcMInvTimesTau(_rbdl_model, _q, vec, minv_vec, true);
-
-    ///TODO: REMOVE THIS SHIT!
-    RigidBodyDynamics::UpdateKinematics(_rbdl_model, _q, _qdot, _qddot);
+    RigidBodyDynamics::CalcMInvTimesTau(_rbdl_model, _q, vec, minv_vec, false);
 }
 
 bool XBot::ModelInterfaceRBDL::getPointAcceleration(const std::string& link_name,
