@@ -410,11 +410,6 @@ void XBot::ModelInterfaceRBDL::getInertiaMatrix(Eigen::MatrixXd& M) const
     RigidBodyDynamics::CompositeRigidBodyAlgorithm(_rbdl_model, _q, M, false);
 }
 
-void XBot::ModelInterfaceRBDL::getInertiaInverseTimesVector(const Eigen::VectorXd& vec, Eigen::VectorXd& minv_vec) const
-{
-    RigidBodyDynamics::CalcMInvTimesTau(_rbdl_model, _q, vec, minv_vec, false);
-}
-
 bool XBot::ModelInterfaceRBDL::getPointAcceleration(const std::string& link_name,
                                                     const KDL::Vector& point,
                                                     KDL::Vector& acceleration) const

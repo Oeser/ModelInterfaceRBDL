@@ -61,7 +61,7 @@ public:
 
     virtual void computeGravityCompensation(Eigen::VectorXd& g) const;
 
-    virtual void getCentroidalMomentum(Eigen::Vector6d& centroidal_momentum) const;
+    virtual void getCentroidalMomentum(Eigen::Vector6d& centroidal_momentum);
 
     virtual void computeInverseDynamics(Eigen::VectorXd& tau) const;
 
