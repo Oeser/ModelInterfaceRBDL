@@ -440,7 +440,7 @@ void XBot::ModelInterfaceRBDL::getCentroidalMomentum(Eigen::Vector6d& centroidal
     double mass;
     RigidBodyDynamics::Math::Vector3d tmp_2;
     RigidBodyDynamics::Utils::CalcCenterOfMass(_rbdl_model, _q, _qdot, mass, tmp_2, &_tmp_vector3d, &_tmp_vector3d_1, false);
-    centroidal_momentum.head<3>() = _tmp_vector3d;
+    centroidal_momentum.head<3>() = _tmp_vector3d*mass;
     centroidal_momentum.tail<3>() = _tmp_vector3d_1;
 }
 
