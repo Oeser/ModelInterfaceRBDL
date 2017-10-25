@@ -20,8 +20,15 @@
 #include <ModelInterfaceRBDL/ModelInterfaceRBDL.h>
 #include <Eigen/QR>
 
+extern "C" XBot::ModelInterface* create_instance()
+{
+  return new  XBot::ModelInterfaceRBDL();
+}
 
-SHLIBPP_DEFINE_SHARED_SUBCLASS(model_interface_rbdl, XBot::ModelInterfaceRBDL, XBot::ModelInterface);
+extern "C" void destroy_instance( XBot::ModelInterface* instance )
+{
+  delete instance;
+}
 
 bool XBot::ModelInterfaceRBDL::init_model(const std::string& path_to_cfg)
 {
