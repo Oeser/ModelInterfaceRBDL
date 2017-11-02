@@ -114,10 +114,8 @@ bool XBot::ModelInterfaceRBDL::setFloatingBaseTwist(const KDL::Twist& floating_b
 
     RigidBodyDynamics::CalcPointJacobian6D(_rbdl_model, _q, _floating_base_link_id, Eigen::Vector3d::Zero(), _tmp_jacobian6, false);
 
-//     std::cout << "****************\n" << _tmp_jacobian6 << std::endl;
 
     Eigen::Matrix3d Tphi = _tmp_jacobian6.block<3, 3>(0, 3);
-//     std::cout << "****************\n" << Tphi << std::endl;
     _qdot.segment<3>(3) = Tphi.colPivHouseholderQr().solve(fb_twist_eigen.tail<3>());
     _qdot.head<3>() = fb_twist_eigen.head<3>();
 
@@ -292,7 +290,6 @@ bool XBot::ModelInterfaceRBDL::setFloatingBasePose(const KDL::Frame& floating_ba
     _q.head(3) = _tmp_vector3d - _fb_origin_offset;
 
     chain("virtual_chain").setJointPosition(_q.head<6>());
-    // a
     return true;
 }
 
