@@ -19,6 +19,32 @@
 
 #include <ModelInterfaceRBDL/ModelInterfaceRBDL.h>
 #include <Eigen/QR>
+#include <cstdio>
+#include <sys/stat.h> 
+#include <fcntl.h>
+
+
+#include <XBotInterface/RtLog.hpp>
+using XBot::Logger;
+
+int suppress_stdout() {
+  fflush(stdout);
+
+  int ret = dup(1);
+  int nullfd = open("/dev/null", O_WRONLY);
+  // check nullfd for error omitted
+  dup2(nullfd, 1);
+  close(nullfd);
+
+  return ret;
+}
+
+void resume_stdout(int fd) {
+  fflush(stdout);
+  dup2(fd, 1);
+  close(fd);
+}
+
 
 extern "C" XBot::ModelInterface* create_instance()
 {
@@ -32,13 +58,17 @@ extern "C" void destroy_instance( XBot::ModelInterface* instance )
 
 bool XBot::ModelInterfaceRBDL::init_model(const std::string& path_to_cfg)
 {
-    std::cout << "Initializing RBDL model!" << std::endl;
-    std::cout << "Floating base model: " << (isFloatingBase() ? "TRUE" : "FALSE") << std::endl;
+    Logger::info() << "Initializing RBDL model!" << Logger::endl();
+    Logger::info() << "Floating base model: " << (isFloatingBase() ? "TRUE" : "FALSE") << Logger::endl();
     // Init rbdl model with urdf
+    int fd = suppress_stdout();
     if(!RigidBodyDynamics::Addons::URDFReadFromString(getUrdfString().c_str(), &_rbdl_model, isFloatingBase(), false)){
-        std::cout << "ERROR in " << __func__ << ": RBDL model could not be initilized from given URDF string!" << std::endl;
+        Logger::error() << "ERROR in " << __func__ << ": RBDL model could not be initilized from given URDF string!" << Logger::endl();
         return false;
     }
+    
+    resume_stdout(fd);
+   
 
     // Init configuration vectors
     _ndof = _rbdl_model.dof_count;
@@ -79,13 +109,13 @@ bool XBot::ModelInterfaceRBDL::init_model(const std::string& path_to_cfg)
         std::string body_name(_rbdl_model.GetBodyName(i+link_id_offset+1));
         urdf::LinkConstSharedPtr link_ptr = getUrdf().getLink(body_name);
         if(!link_ptr){
-            std::cerr << "ERROR in " << __func__ << "! Link " << body_name << " NOT defined in the URDF! Check that is_floating_base flag in the config file matches with the first urdf joint type ('floating' if true, 'fixed' if false)" << std::endl;
+            Logger::error() << "ERROR in " << __func__ << "! Link " << body_name << " NOT defined in the URDF! Check that is_floating_base flag in the config file matches with the first urdf joint type ('floating' if true, 'fixed' if false)" << Logger::endl();
             return false;
         }
         std::string joint_name = link_ptr->parent_joint->name;
         int joint_model_id = _rbdl_model.mJoints[i+link_id_offset+1].q_index;
 
-        std::cout << "Joint name: " << joint_name << " RBDL ID: " << joint_model_id << std::endl;
+        Logger::info() << "Joint name: " << joint_name << " RBDL ID: " << joint_model_id << Logger::endl();
 
         _model_ordered_joint_names[joint_model_id] = joint_name;
 
@@ -99,9 +129,10 @@ bool XBot::ModelInterfaceRBDL::init_model(const std::string& path_to_cfg)
 
     _fb_origin_offset = RigidBodyDynamics::CalcBodyToBaseCoordinates(_rbdl_model, _q*0, _floating_base_link_id, Eigen::Vector3d::Zero(), true);
     if(isFloatingBase()){
-        std::cout << "Floating base origin offset: " << _fb_origin_offset.transpose() << std::endl;
+        Logger::info() << "Floating base origin offset: " << _fb_origin_offset.transpose() << Logger::endl();
     }
 
+    Logger::success() << "ModelInterfaceRBDL initialized successfully!" << Logger::endl();
 
     return true;
 }
