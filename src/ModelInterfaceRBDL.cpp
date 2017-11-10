@@ -22,7 +22,7 @@
 #include <cstdio>
 #include <sys/stat.h> 
 #include <fcntl.h>
-#include <XBotCore-interfaces/SoLib.h>
+#include <XBotInterface/SoLib.h>
 
 #include <XBotInterface/RtLog.hpp>
 
