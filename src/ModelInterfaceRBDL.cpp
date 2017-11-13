@@ -19,26 +19,48 @@
 
 #include <ModelInterfaceRBDL/ModelInterfaceRBDL.h>
 #include <Eigen/QR>
+#include <cstdio>
+#include <sys/stat.h> 
+#include <fcntl.h>
+#include <XBotInterface/SoLib.h>
 
-extern "C" XBot::ModelInterface* create_instance()
-{
-  return new  XBot::ModelInterfaceRBDL();
+#include <XBotInterface/RtLog.hpp>
+
+REGISTER_SO_LIB_(XBot::ModelInterfaceRBDL, XBot::ModelInterface);
+
+using XBot::Logger;
+
+int suppress_stdout() {
+  fflush(stdout);
+
+  int ret = dup(1);
+  int nullfd = open("/dev/null", O_WRONLY);
+  // check nullfd for error omitted
+  dup2(nullfd, 1);
+  close(nullfd);
+
+  return ret;
 }
 
-extern "C" void destroy_instance( XBot::ModelInterface* instance )
-{
-  delete instance;
+void resume_stdout(int fd) {
+  fflush(stdout);
+  dup2(fd, 1);
+  close(fd);
 }
 
 bool XBot::ModelInterfaceRBDL::init_model(const std::string& path_to_cfg)
 {
-    std::cout << "Initializing RBDL model!" << std::endl;
-    std::cout << "Floating base model: " << (isFloatingBase() ? "TRUE" : "FALSE") << std::endl;
+    Logger::info() << "Initializing RBDL model!" << Logger::endl();
+    Logger::info() << "Floating base model: " << (isFloatingBase() ? "TRUE" : "FALSE") << Logger::endl();
     // Init rbdl model with urdf
+    int fd = suppress_stdout();
     if(!RigidBodyDynamics::Addons::URDFReadFromString(getUrdfString().c_str(), &_rbdl_model, isFloatingBase(), false)){
-        std::cout << "ERROR in " << __func__ << ": RBDL model could not be initilized from given URDF string!" << std::endl;
+        Logger::error() << "ERROR in " << __func__ << ": RBDL model could not be initilized from given URDF string!" << Logger::endl();
         return false;
     }
+    
+    resume_stdout(fd);
+   
 
     // Init configuration vectors
     _ndof = _rbdl_model.dof_count;
@@ -79,13 +101,13 @@ bool XBot::ModelInterfaceRBDL::init_model(const std::string& path_to_cfg)
         std::string body_name(_rbdl_model.GetBodyName(i+link_id_offset+1));
         urdf::LinkConstSharedPtr link_ptr = getUrdf().getLink(body_name);
         if(!link_ptr){
-            std::cerr << "ERROR in " << __func__ << "! Link " << body_name << " NOT defined in the URDF! Check that is_floating_base flag in the config file matches with the first urdf joint type ('floating' if true, 'fixed' if false)" << std::endl;
+            Logger::error() << "ERROR in " << __func__ << "! Link " << body_name << " NOT defined in the URDF! Check that is_floating_base flag in the config file matches with the first urdf joint type ('floating' if true, 'fixed' if false)" << Logger::endl();
             return false;
         }
         std::string joint_name = link_ptr->parent_joint->name;
         int joint_model_id = _rbdl_model.mJoints[i+link_id_offset+1].q_index;
 
-        std::cout << "Joint name: " << joint_name << " RBDL ID: " << joint_model_id << std::endl;
+        Logger::info() << "Joint name: " << joint_name << " RBDL ID: " << joint_model_id << Logger::endl();
 
         _model_ordered_joint_names[joint_model_id] = joint_name;
 
@@ -99,8 +121,10 @@ bool XBot::ModelInterfaceRBDL::init_model(const std::string& path_to_cfg)
 
     _fb_origin_offset = RigidBodyDynamics::CalcBodyToBaseCoordinates(_rbdl_model, _q*0, _floating_base_link_id, Eigen::Vector3d::Zero(), true);
     if(isFloatingBase()){
-        std::cout << "Floating base origin offset: " << _fb_origin_offset.transpose() << std::endl;
+        Logger::info() << "Floating base origin offset: " << _fb_origin_offset.transpose() << Logger::endl();
     }
+
+    Logger::success() << "ModelInterfaceRBDL initialized successfully!" << Logger::endl();
 
     return true;
 }
@@ -120,10 +144,8 @@ bool XBot::ModelInterfaceRBDL::setFloatingBaseTwist(const KDL::Twist& floating_b
 
     RigidBodyDynamics::CalcPointJacobian6D(_rbdl_model, _q, _floating_base_link_id, Eigen::Vector3d::Zero(), _tmp_jacobian6, false);
 
-//     std::cout << "****************\n" << _tmp_jacobian6 << std::endl;
 
     Eigen::Matrix3d Tphi = _tmp_jacobian6.block<3, 3>(0, 3);
-//     std::cout << "****************\n" << Tphi << std::endl;
     _qdot.segment<3>(3) = Tphi.colPivHouseholderQr().solve(fb_twist_eigen.tail<3>());
     _qdot.head<3>() = fb_twist_eigen.head<3>();
 
@@ -236,6 +258,8 @@ bool XBot::ModelInterfaceRBDL::update(bool update_position, bool update_velocity
 
 //     RigidBodyDynamics::UpdateKinematicsCustom(_rbdl_model, q_ptr, qdot_ptr, qddot_ptr);
     RigidBodyDynamics::UpdateKinematics(_rbdl_model, _q, _qdot, _qddot);
+
+
     return success;
 }
 
@@ -296,14 +320,13 @@ bool XBot::ModelInterfaceRBDL::setFloatingBasePose(const KDL::Frame& floating_ba
     _q.head(3) = _tmp_vector3d - _fb_origin_offset;
 
     chain("virtual_chain").setJointPosition(_q.head<6>());
-    // a
     return true;
 }
 
 void XBot::ModelInterfaceRBDL::getCOMVelocity(KDL::Vector& velocity) const
 {
     double mass;
-    RigidBodyDynamics::Utils::CalcCenterOfMass(_rbdl_model, _q, _qdot, mass, _tmp_vector3d, &_tmp_vector3d_1, nullptr, false);
+    RigidBodyDynamics::Utils::CalcCenterOfMass(_rbdl_model, _q, _qdot, mass, _tmp_vector3d, &_tmp_vector3d_1, nullptr, true);
     tf::vectorEigenToKDL(_tmp_vector3d_1, velocity);
 }
 
@@ -417,6 +440,19 @@ void XBot::ModelInterfaceRBDL::getInertiaMatrix(Eigen::MatrixXd& M) const
     RigidBodyDynamics::CompositeRigidBodyAlgorithm(_rbdl_model, _q, M, false);
 }
 
+void XBot::ModelInterfaceRBDL::getInertiaInverseTimesVector(const Eigen::VectorXd& vec, Eigen::VectorXd& minv_vec) const
+{
+    minv_vec.setZero(getJointNum());
+
+    ///TODO: REMOVE THIS SHIT!
+    RigidBodyDynamics::UpdateKinematics(_rbdl_model, _q, _qdot*0.0, _qddot);
+
+    RigidBodyDynamics::CalcMInvTimesTau(_rbdl_model, _q, vec, minv_vec, true);
+
+    ///TODO: REMOVE THIS SHIT!
+    RigidBodyDynamics::UpdateKinematics(_rbdl_model, _q, _qdot, _qddot);
+}
+
 bool XBot::ModelInterfaceRBDL::getPointAcceleration(const std::string& link_name,
                                                     const KDL::Vector& point,
                                                     KDL::Vector& acceleration) const
@@ -447,7 +483,7 @@ void XBot::ModelInterfaceRBDL::getCentroidalMomentum(Eigen::Vector6d& centroidal
     double mass;
     RigidBodyDynamics::Math::Vector3d tmp_2;
     RigidBodyDynamics::Utils::CalcCenterOfMass(_rbdl_model, _q, _qdot, mass, tmp_2, &_tmp_vector3d, &_tmp_vector3d_1, false);
-    centroidal_momentum.head<3>() = _tmp_vector3d;
+    centroidal_momentum.head<3>() = _tmp_vector3d*mass;
     centroidal_momentum.tail<3>() = _tmp_vector3d_1;
 }
 

@@ -73,6 +73,8 @@ public:
 
     virtual void getInertiaMatrix(Eigen::MatrixXd& M) const;
 
+    virtual void getInertiaInverseTimesVector(const Eigen::VectorXd& vec, Eigen::VectorXd& minv_vec) const;
+
     virtual bool getPointAcceleration(const std::string& link_name,
                                       const KDL::Vector& point,
                                       KDL::Vector& acceleration) const;
@@ -118,6 +120,7 @@ private:
     mutable KDL::Frame _tmp_kdl_frame;
 
     Eigen::Matrix<double, 6, 6> _row_inversion;
+
 
     int linkId(const std::string& link_name) const;
     int jointModelId(const std::string& joint_name) const;
