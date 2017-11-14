@@ -22,9 +22,12 @@
 #include <cstdio>
 #include <sys/stat.h> 
 #include <fcntl.h>
-
+#include <XBotInterface/SoLib.h>
 
 #include <XBotInterface/RtLog.hpp>
+
+REGISTER_SO_LIB_(XBot::ModelInterfaceRBDL, XBot::ModelInterface);
+
 using XBot::Logger;
 
 int suppress_stdout() {
@@ -43,17 +46,6 @@ void resume_stdout(int fd) {
   fflush(stdout);
   dup2(fd, 1);
   close(fd);
-}
-
-
-extern "C" XBot::ModelInterface* create_instance()
-{
-  return new  XBot::ModelInterfaceRBDL();
-}
-
-extern "C" void destroy_instance( XBot::ModelInterface* instance )
-{
-  delete instance;
 }
 
 bool XBot::ModelInterfaceRBDL::init_model(const std::string& path_to_cfg)
