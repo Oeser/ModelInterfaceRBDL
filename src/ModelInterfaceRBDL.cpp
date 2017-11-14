@@ -63,7 +63,7 @@ bool XBot::ModelInterfaceRBDL::init_model(const std::string& path_to_cfg)
     // Init rbdl model with urdf
     int fd = suppress_stdout();
     if(!RigidBodyDynamics::Addons::URDFReadFromString(getUrdfString().c_str(), &_rbdl_model, isFloatingBase(), false)){
-        Logger::error() << "ERROR in " << __func__ << ": RBDL model could not be initilized from given URDF string!" << Logger::endl();
+        Logger::error() << "in " << __func__ << ": RBDL model could not be initilized from given URDF string!" << Logger::endl();
         return false;
     }
     
@@ -109,7 +109,7 @@ bool XBot::ModelInterfaceRBDL::init_model(const std::string& path_to_cfg)
         std::string body_name(_rbdl_model.GetBodyName(i+link_id_offset+1));
         urdf::LinkConstSharedPtr link_ptr = getUrdf().getLink(body_name);
         if(!link_ptr){
-            Logger::error() << "ERROR in " << __func__ << "! Link " << body_name << " NOT defined in the URDF! Check that is_floating_base flag in the config file matches with the first urdf joint type ('floating' if true, 'fixed' if false)" << Logger::endl();
+            Logger::error() << "in " << __func__ << "! Link " << body_name << " NOT defined in the URDF! Check that is_floating_base flag in the config file matches with the first urdf joint type ('floating' if true, 'fixed' if false)" << Logger::endl();
             return false;
         }
         std::string joint_name = link_ptr->parent_joint->name;
@@ -140,7 +140,7 @@ bool XBot::ModelInterfaceRBDL::init_model(const std::string& path_to_cfg)
 bool XBot::ModelInterfaceRBDL::setFloatingBaseTwist(const KDL::Twist& floating_base_twist)
 {
     if(!isFloatingBase()){
-        std::cerr << "ERROR in " << __func__ << "! Model is NOT floating base!" << std::endl;
+        Logger::error() << "in " << __func__ << "! Model is NOT floating base!" << Logger::endl();
         return false;
     }
 
@@ -201,7 +201,7 @@ bool XBot::ModelInterfaceRBDL::getPose(const std::string& source_frame, KDL::Fra
 
     int body_id = linkId(source_frame);
     if( body_id == -1 ){
-        std::cerr << "ERROR in " << __func__ << ": link " << source_frame << " not defined in RBDL model!" << std::endl;
+        Logger::error() << "in " << __func__ << ": link " << source_frame << " not defined in RBDL model!" << Logger::endl();
         return false;
     }
 
@@ -277,7 +277,7 @@ bool XBot::ModelInterfaceRBDL::getJacobian(const std::string& link_name,
 {
     int body_id = linkId(link_name);
     if( body_id == -1 ){
-        std::cerr << "ERROR in " << __func__ << ": link " << link_name << " not defined in RBDL model!" << std::endl;
+        Logger::error() << "in " << __func__ << ": link " << link_name << " not defined in RBDL model!" << Logger::endl();
         return false;
     }
 
@@ -310,7 +310,7 @@ int XBot::ModelInterfaceRBDL::jointModelId(const std::string& joint_name) const
 bool XBot::ModelInterfaceRBDL::setFloatingBasePose(const KDL::Frame& floating_base_pose)
 {
     if(!isFloatingBase()){
-        std::cerr << "ERROR in " << __func__ << "! Model is NOT floating base!" << std::endl;
+        Logger::error() << "in " << __func__ << "! Model is NOT floating base!" << Logger::endl();
         return false;
     }
 
@@ -347,7 +347,7 @@ bool XBot::ModelInterfaceRBDL::getAccelerationTwist(const std::string& link_name
 {
     int body_id = linkId(link_name);
     if( body_id == -1 ){
-        std::cerr << "ERROR in " << __func__ << ": link " << link_name << " not defined in RBDL model!" << std::endl;
+        Logger::error() << "in " << __func__ << ": link " << link_name << " not defined in RBDL model!" << Logger::endl();
         return false;
     }
     _tmp_vector3d.setZero();
@@ -360,7 +360,7 @@ bool XBot::ModelInterfaceRBDL::getVelocityTwist(const std::string& link_name, KD
 {
     int body_id = linkId(link_name);
     if( body_id == -1 ){
-        std::cerr << "ERROR in " << __func__ << ": link " << link_name << " not defined in RBDL model!" << std::endl;
+        Logger::error() << "in " << __func__ << ": link " << link_name << " not defined in RBDL model!" << Logger::endl();
         return false;
     }
 
@@ -407,7 +407,7 @@ bool XBot::ModelInterfaceRBDL::computeJdotQdot(const std::string& link_name,
 {
     int body_id = linkId(link_name);
     if( body_id == -1 ){
-        std::cerr << "ERROR in " << __func__ << ": link " << link_name << " not defined in RBDL model!" << std::endl;
+        Logger::error() << "in " << __func__ << ": link " << link_name << " not defined in RBDL model!" << Logger::endl();
         return false;
     }
 
@@ -467,7 +467,7 @@ bool XBot::ModelInterfaceRBDL::getPointAcceleration(const std::string& link_name
 {
     int body_id = linkId(link_name);
     if( body_id == -1 ){
-        std::cerr << "ERROR in " << __func__ << ": link " << link_name << " not defined in RBDL model!" << std::endl;
+        Logger::error() << "ERROR in " << __func__ << ": link " << link_name << " not defined in RBDL model!" << Logger::endl();
         return false;
     }
 
