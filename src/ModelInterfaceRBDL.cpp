@@ -92,6 +92,8 @@ bool XBot::ModelInterfaceRBDL::init_model(const std::string& path_to_cfg)
 
         _floating_base_link_id = 2;
         _floating_base_link = _rbdl_model.GetBodyName(_floating_base_link_id);
+        
+        Logger::info() << "Floating base link name: " << _floating_base_link << Logger::endl();
     }
 
     int link_id_offset = isFloatingBase() ? 2 : 0;
@@ -496,9 +498,11 @@ bool XBot::ModelInterfaceRBDL::getFloatingBaseLink(std::string& floating_base_li
 {
     if(!isFloatingBase()){
         return false;
+        Logger::error() << "in " << __func__ << ": model is not floating base!" << Logger::endl();
     }
 
     floating_base_link = _floating_base_link;
+    return true;
 }
 
 
