@@ -381,13 +381,13 @@ void XBot::ModelInterfaceRBDL::computeGravityCompensation(Eigen::VectorXd& g) co
 
 void XBot::ModelInterfaceRBDL::computeInverseDynamics(Eigen::VectorXd& tau) const
 {
-    tau.resize(_ndof);
+    tau.setZero(_ndof);
     RigidBodyDynamics::InverseDynamics(_rbdl_model, _q, _qdot, _qddot, tau);
 }
 
 void XBot::ModelInterfaceRBDL::computeNonlinearTerm(Eigen::VectorXd& n) const
 {
-    n.resize(_ndof);
+    n.setZero(_ndof);
 
     RigidBodyDynamics::NonlinearEffects(_rbdl_model,
                                         _q,
