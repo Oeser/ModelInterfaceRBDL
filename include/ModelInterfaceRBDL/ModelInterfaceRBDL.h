@@ -21,7 +21,6 @@
 #define XBOT_MODELINTERFACE_RBDL_H
 
 #include <XBotInterface/ModelInterface.h>
-#include <SharedLibraryClass.h>
 #include <rbdl/rbdl.h>
 #include <rbdl/rbdl_utils.h>
 #include <rbdl/addons/urdfreader/urdfreader.h>
