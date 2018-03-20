@@ -44,6 +44,7 @@ endif()
 
 
 find_package(XBotInterface REQUIRED)
+find_package(eigen_conversions REQUIRED)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 find_package(RBDL REQUIRED)
@@ -51,6 +52,7 @@ find_package(RBDL REQUIRED)
 include_directories(include ${XBotInterface_INCLUDE_DIRS}
                             ${RBDL_INCLUDE_DIR}
                             ${RBDL_URDFReader_INCLUDE_DIR}
+                            ${eigen_conversions_INCLUDE_DIRS}
                             )
                             
 # for every file in INCLUDES CMake already sets the property HEADER_FILE_ONLY
